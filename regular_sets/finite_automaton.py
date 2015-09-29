@@ -20,6 +20,11 @@ class DFA:
         return next(iter(state))
 
     def validate_sentence(self, input_string):
+        """
+        :param input_string: sentence to validate
+        :return: True, if is a valid sentence
+                 False, otherwise
+        """
         return self.compute(self.initial_state, input_string) in self.accept_states
 
 
