@@ -1,0 +1,31 @@
+## Customize the test machine
+machine:
+  timezone: America/Sao_Paulo # Set the timezone
+
+  # Version of ruby to use
+  python:
+    version: 3.4.3
+
+## Customize checkout
+checkout:
+  post:
+    - git submodule sync
+    - git submodule update --init # use submodules
+
+## Customize dependencies
+dependencies:
+  pre:
+    - pip install -r requirements # install python dependencies
+
+  override:
+    - bundle install: # note ':' here
+        timeout: 180 # fail if command has no output for 3 minutes
+
+## Customize test commands
+test:
+  override:
+    - nosetests regular_sets/finite_automaton_test.py # use nose for testing
+
+## Custom notifications
+#notify:
+#  webhooks:
