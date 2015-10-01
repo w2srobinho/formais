@@ -1,4 +1,20 @@
 
+from functools import reduce
+
+
+def get_alphabet(machine):
+    """Returns the NFA's or DFA's input alphabet, generated on the fly.
+    execute 'or (union)' foreach two set elements from simbols
+
+    :param machine: {dict} NFA or DFA
+    :return:{set} alphabet
+    """
+    sigma = reduce(
+        (lambda a, b: set(a) | set(b)),
+        [x.keys() for x in machine.delta.values()]
+    )
+    return sigma
+
 
 class DFA:
     """Class that encapsulates a DFA."""
