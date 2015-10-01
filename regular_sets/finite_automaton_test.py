@@ -37,9 +37,18 @@ class DFATests(unittest.TestCase):
         get alphabeth from DFA
         alphabeth = {a, b}
         """
-        #print()
         sigma = finite_automaton.get_alphabet(self.dfa)
         self.assertSetEqual({'a', 'b'}, sigma)
+
+    def test_get_states(self):
+        """
+        get states from DFA
+        states {q0, q1}
+        """
+        states = finite_automaton.get_states(self.dfa)
+        self.assertSetEqual({'q0', 'q1'}, states)
+
+
 
 if __name__ == '__main__':
     unittest.main()
