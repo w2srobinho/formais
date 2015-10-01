@@ -15,7 +15,7 @@ checkout:
 ## Customize dependencies
 dependencies:
   pre:
-    - pip install -r requirements # install python dependencies
+    - pip install -r requirements.txt # install python dependencies
 
   override:
     - bundle install: # note ':' here
