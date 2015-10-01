@@ -17,10 +17,6 @@ dependencies:
   pre:
     - pip install -r requirements.txt # install python dependencies
 
-  override:
-    - bundle install: # note ':' here
-        timeout: 180 # fail if command has no output for 3 minutes
-
 ## Customize test commands
 test:
   override:
