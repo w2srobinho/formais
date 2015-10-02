@@ -20,7 +20,7 @@ dependencies:
 ## Customize test commands
 test:
   override:
-    - nosetests --with-coverage --cover-erase --cover-package src # use nose for testing
+    - nosetests --with-coverage --cover-erase --cover-package regular_sets # use nose for testing
 
 ## Custom notifications
 #notify:
