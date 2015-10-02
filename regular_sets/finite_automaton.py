@@ -25,9 +25,7 @@ def get_states(machine):
     list_states = reduce((lambda list_a, list_b: list_a + list_b),
                          [list(symbols.values()) for symbols in machine.delta.values()])
 
-    _states = set([machine.initial_state]) | \
-              set(machine.delta.keys()) | \
-              reduce((lambda a, b: a | b), list_states)
+    _states = {machine.initial_state} | set(machine.delta.keys()) | reduce((lambda a, b: a | b), list_states)
 
     return _states
 
@@ -63,5 +61,37 @@ class DFA:
         :return: True, if is a valid sentence
                  False, otherwise
         """
-        return (self.compute(self.initial_state, input_string) in self.accept_states)
+        return self.compute(self.initial_state, input_string) in self.accept_states
 
+
+class NDFA(DFA):
+    """Class that encapsulates an NFA.
+    inherit from DFA
+    """
+
+    def compute(self, state, input_string):
+        """override compute from {DFA}
+        compute strings in NDFA
+        :param state: is actual state
+        :param input_string: string to compute
+        :return: empty set if transition isn't defined
+                else set with states
+        """
+        _states = {state}
+        for a in input_string:
+            new_states = set([])
+            for _state in _states:
+                try:
+                    new_states |= self.delta[_state][a]
+                except KeyError:
+                    pass
+            _states = new_states
+        return _states
+
+    def validate_sentence(self, input_string):
+        """override validate_sentence from {DFA}
+        :param input_string: sentence to validate
+        :return: True, if is a valid sentence
+                 False, otherwise
+        """
+        return len(self.compute(self.initial_state, input_string) & self.accept_states) > 0
