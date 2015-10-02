@@ -22,6 +22,6 @@ test:
   override:
     - nosetests --with-coverage --cover-erase --cover-html-dir=./tmp/res --cover-html --cover-package regular_sets # use nose for testing
 
-## Custom notifications
-#notify:
-#  webhooks:
+general:
+  artifacts:
+    - "tmp/res" # relative to the build directory
