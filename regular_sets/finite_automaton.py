@@ -9,7 +9,7 @@ def get_alphabet(machine):
     :return: {set} alphabet
     """
     sigma = reduce(
-        (lambda symbol_a, symbol_b: set(symbol_a) | set(symbol_b)),
+        (lambda a_symbol, b_symbol: set(a_symbol) | set(b_symbol)),
         [dicts.keys() for dicts in machine.delta.values()]
     )
     return sigma
@@ -22,10 +22,10 @@ def get_states(machine):
     :param machine: {dict} NFA or DFA
     :return: {set} states
     """
-    list_states = reduce((lambda list_a, list_b: list_a + list_b),
+    states_list = reduce((lambda a_list, b_list: a_list + b_list),
                          [list(symbols.values()) for symbols in machine.delta.values()])
 
-    _states = {machine.initial_state} | set(machine.delta.keys()) | reduce((lambda a, b: a | b), list_states)
+    _states = {machine.initial_state} | set(machine.delta.keys()) | reduce((lambda a, b: a | b), states_list)
 
     return _states
 
@@ -95,3 +95,34 @@ class NDFA(DFA):
                  False, otherwise
         """
         return len(self.compute(self.initial_state, input_string) & self.accept_states) > 0
+
+    def determinization(self):
+        """Converts the input NFA into a DFA.
+        :return: {DFA} compatible with this NDFA
+        """
+        _initial_state = frozenset([self.initial_state])  # define _initial_state as immutable
+        _states = set([_initial_state])
+        unprocessed_states = _states.copy()  # unprocessed_states tracks states for which delta is not yet defined
+        new_delta = {}
+        accept_states = []
+        sigma = get_alphabet(self)
+
+        while len(unprocessed_states) > 0:
+            actual_states_set = unprocessed_states.pop()
+            new_delta[actual_states_set] = {}
+            for symbol in sigma:
+                next_states_list = [self.compute(q, symbol) for q in actual_states_set] # it gets list of next states
+                next_states = reduce(lambda x, y: x | y, next_states_list) # union foreach list elements
+                next_states = frozenset(next_states)
+                if len(next_states):
+                    new_delta[actual_states_set][symbol] = next_states
+
+                    if not next_states in _states: # if new state found, add to unprocessed list for it processes in future
+                        _states.add(next_states)
+                        unprocessed_states.add(next_states)
+
+        for actual_states_set in _states:
+            if len(actual_states_set & self.accept_states) > 0:
+                accept_states.append(actual_states_set)
+
+        return DFA(new_delta, _initial_state, accept_states)

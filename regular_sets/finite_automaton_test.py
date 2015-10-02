@@ -3,6 +3,32 @@ import unittest
 from regular_sets import finite_automaton
 from regular_sets.finite_automaton import DFA, NDFA
 
+def create_dfa():
+    """ create DFA to help the tests
+        new_delta |     a    |     b    |
+       -----------|----------|----------|
+          ->{q0}  | {q1,q2}  |     -    |
+          *{q1,q2}|   {q1}   |   {q3}   |
+           *{q1}  |   {q1}   |     -    |
+           *{q3}  |   {q2}   |     -    |
+            {q2}  |     -    |   {q3}   |
+       ---------------------------------|
+    :return: {DFA}
+    """
+    # It's needed use frozenset on states to iterate by element in DFA
+    # for not use iterate in hashes
+    delta = {frozenset({'q0'}): {'a': frozenset({'q1','q2'})},
+             frozenset({'q1', 'q2'}): {'a': frozenset({'q1'}), 'b': frozenset({'q3'})},
+             frozenset({'q1'}): {'a': frozenset({'q1'})},
+             frozenset({'q3'}): {'a': frozenset({'q2'})},
+             frozenset({'q2'}): {'b': frozenset({'q3'})}}
+
+    initial_state = frozenset({'q0'})
+    accept_states = [frozenset({'q1', 'q2'}),
+                     frozenset({'q1'}),
+                     frozenset({'q3'})]
+
+    return DFA(delta, initial_state, accept_states)
 
 class DFATests(unittest.TestCase):
     def setUp(self):
@@ -19,8 +45,8 @@ class DFATests(unittest.TestCase):
         self.delta = {'q0': {'a': {'q1'}, 'b': {'q1'}}, 'q1': {'a': {'q0'}, 'b': {'q0'}}}
 
         initial_state = 'q0'
-        final_states = ['q0']
-        self.dfa = DFA(self.delta, initial_state, final_states)
+        accept_states = ['q0']
+        self.dfa = DFA(self.delta, initial_state, accept_states)
 
     def test_accept_sentence_abab(self):
         """
@@ -71,8 +97,8 @@ class NDFATests(unittest.TestCase):
         self.delta = {'q0': {'a': {'q1', 'q2'}}, 'q1': {'a': {'q1'}}, 'q2': {'b': {'q3'}}, 'q3': {'a': {'q2'}}}
 
         initial_state = 'q0'
-        final_states = ['q0', 'q1', 'q3']
-        self.ndfa = NDFA(self.delta, initial_state, final_states)
+        accept_states = ['q1', 'q3']
+        self.ndfa = NDFA(self.delta, initial_state, accept_states)
 
     def test_accept_sentence_aaa(self):
         """
@@ -97,8 +123,8 @@ class NDFATests(unittest.TestCase):
 
     def test_get_alphabet_from_NDFA(self):
         """
-        get alphabeth from DFA
-        alphabeth = {a, b}
+        get alphabet from DFA
+        alphabet = {a, b}
         """
         sigma = finite_automaton.get_alphabet(self.ndfa)
         self.assertSetEqual({'a', 'b'}, sigma)
@@ -110,6 +136,39 @@ class NDFATests(unittest.TestCase):
         """
         states = finite_automaton.get_states(self.ndfa)
         self.assertSetEqual({'q0', 'q1', 'q2', 'q3'}, states)
+
+    def test_determinization(self):
+        """
+        transform this NDFA to compatible DFA
+
+        new delta table determinate
+
+           L = a+ or (ab)+}
+
+           delta |    a   |   b   |             new_delta |     a    |     b    |
+           ------|--------|-------|              ---------|----------|----------|
+            ->q0 | q1,q2  |   -   |       \       ->{q0}  | {q1,q2}  |     -    |
+             *q1 |   q1   |   -   |    ----\      *{q1,q2}|   {q1}   |   {q3}   |
+              q2 |   -    |  q3   |    ----/       *{q1}  |   {q1}   |     -    |
+             *q3 |   q2   |   -   |       /        *{q3}  |   {q2}   |     -    |
+           -----------------------|                 {q2}  |     -    |   {q3}   |
+                                                 -------------------------------|
+
+        """
+        ndfa_determinized = self.ndfa.determinization()
+
+        self.assertIsInstance(ndfa_determinized, DFA)
+
+        expected_dfa = create_dfa()
+        self.assertDictEqual(expected_dfa.delta, ndfa_determinized.delta) # check delta transitions
+        self.assertSetEqual(expected_dfa.accept_states, ndfa_determinized.accept_states) # check accept states
+        self.assertEqual(expected_dfa.initial_state, ndfa_determinized.initial_state) # check initial state
+
+        # check states and alphabet from DFA generated
+        self.assertSetEqual(finite_automaton.get_states(expected_dfa), finite_automaton.get_states(ndfa_determinized))
+        self.assertSetEqual(finite_automaton.get_alphabet(expected_dfa),
+                            finite_automaton.get_alphabet(ndfa_determinized))
+
 
 
 if __name__ == '__main__':
