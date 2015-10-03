@@ -1,6 +1,5 @@
 import unittest
 
-from regular_sets import finite_automaton
 from regular_sets.finite_automaton import DFA, NDFA
 
 def create_dfa():
@@ -67,7 +66,7 @@ class DFATests(unittest.TestCase):
         get alphabeth from DFA
         alphabeth = {a, b}
         """
-        sigma = finite_automaton.get_alphabet(self.dfa)
+        sigma = self.dfa.get_alphabet()
         self.assertSetEqual({'a', 'b'}, sigma)
 
     def test_get_states_from_DFA(self):
@@ -75,7 +74,7 @@ class DFATests(unittest.TestCase):
         get states from DFA
         states {q0, q1}
         """
-        states = finite_automaton.get_states(self.dfa)
+        states = self.dfa.get_states()
         self.assertSetEqual({'q0', 'q1'}, states)
 
 
@@ -94,7 +93,12 @@ class NDFATests(unittest.TestCase):
              *q3 |   q2   |   -   |
            -----------------------|
         """
-        self.delta = {'q0': {'a': {'q1', 'q2'}}, 'q1': {'a': {'q1'}}, 'q2': {'b': {'q3'}}, 'q3': {'a': {'q2'}}}
+        self.delta = {
+            'q0': {'a': {'q1', 'q2'}},
+            'q1': {'a': {'q1'}},
+            'q2': {'b': {'q3'}},
+            'q3': {'a': {'q2'}}
+        }
 
         initial_state = 'q0'
         accept_states = ['q1', 'q3']
@@ -126,7 +130,7 @@ class NDFATests(unittest.TestCase):
         get alphabet from DFA
         alphabet = {a, b}
         """
-        sigma = finite_automaton.get_alphabet(self.ndfa)
+        sigma = self.ndfa.get_alphabet()
         self.assertSetEqual({'a', 'b'}, sigma)
 
     def test_get_states_from_NDFA(self):
@@ -134,7 +138,7 @@ class NDFATests(unittest.TestCase):
         get states from DFA
         states {q0, q1}
         """
-        states = finite_automaton.get_states(self.ndfa)
+        states = self.ndfa.get_states()
         self.assertSetEqual({'q0', 'q1', 'q2', 'q3'}, states)
 
     def test_determinization(self):
@@ -165,9 +169,43 @@ class NDFATests(unittest.TestCase):
         self.assertEqual(expected_dfa.initial_state, ndfa_determinized.initial_state) # check initial state
 
         # check states and alphabet from DFA generated
-        self.assertSetEqual(finite_automaton.get_states(expected_dfa), finite_automaton.get_states(ndfa_determinized))
-        self.assertSetEqual(finite_automaton.get_alphabet(expected_dfa),
-                            finite_automaton.get_alphabet(ndfa_determinized))
+        self.assertSetEqual(expected_dfa.get_states(), ndfa_determinized.get_states())
+        self.assertSetEqual(expected_dfa.get_alphabet(), ndfa_determinized.get_alphabet())
+
+    def test_is_epsilon_free(self):
+        self.assertTrue(self.ndfa.is_epsilon_free())
+
+    def create_epsilon_ndfa(self):
+        """
+           delta |    a   |   b   |   &   |
+           ------|--------|-------|-------|
+            ->q0 |    -   |   -   | q1,q3 |
+             *q1 |   q2   |   -   |   -   |
+              q2 |   q1   |   -   |   -   |
+             *q3 |    -   |   q4  |   -   |
+              q4 |    -   |   q3  |   -   |
+           -------------------------------|
+
+        :return:{NDFA} non epsilon free
+        """
+        initial_state = 'q0'
+        accept_states = ['q1', 'q3']
+
+        delta_with_epsilon = {
+            'q0': {'&': {'q1', 'q3'}},
+            'q1': {'a': {'q2'}},
+            'q2': {'a': {'q1'}},
+            'q3': {'b': {'q4'}},
+            'q4': {'b': {'q3'}}
+        }
+
+        return NDFA(delta_with_epsilon, initial_state, accept_states)
+
+    def test_epsilon_closure_from_q0(self):
+        epsilon_ndfa = self.create_epsilon_ndfa()
+        _epsilon_closure = epsilon_ndfa.epsilon_closure('q0')
+        expected_closure = {'q0','q1','q3'}
+        self.assertSetEqual(expected_closure, _epsilon_closure)
 
 
 
