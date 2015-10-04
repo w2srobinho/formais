@@ -2,33 +2,6 @@ import unittest
 
 from regular_sets.finite_automaton import DFA, NDFA
 
-def create_dfa():
-    """ create DFA to help the tests
-        new_delta |     a    |     b    |
-       -----------|----------|----------|
-          ->{q0}  | {q1,q2}  |     -    |
-          *{q1,q2}|   {q1}   |   {q3}   |
-           *{q1}  |   {q1}   |     -    |
-           *{q3}  |   {q2}   |     -    |
-            {q2}  |     -    |   {q3}   |
-       ---------------------------------|
-    :return: {DFA}
-    """
-    # It's needed use frozenset on states to iterate by element in DFA
-    # for not use iterate in hashes
-    delta = {frozenset({'q0'}): {'a': frozenset({'q1','q2'})},
-             frozenset({'q1', 'q2'}): {'a': frozenset({'q1'}), 'b': frozenset({'q3'})},
-             frozenset({'q1'}): {'a': frozenset({'q1'})},
-             frozenset({'q3'}): {'a': frozenset({'q2'})},
-             frozenset({'q2'}): {'b': frozenset({'q3'})}}
-
-    initial_state = frozenset({'q0'})
-    accept_states = [frozenset({'q1', 'q2'}),
-                     frozenset({'q1'}),
-                     frozenset({'q3'})]
-
-    return DFA(delta, initial_state, accept_states)
-
 class DFATests(unittest.TestCase):
     def setUp(self):
         """delta table
@@ -104,6 +77,86 @@ class NDFATests(unittest.TestCase):
         accept_states = ['q1', 'q3']
         self.ndfa = NDFA(self.delta, initial_state, accept_states)
 
+    def create_epsilon_ndfa(self):
+        """
+           delta |    a   |   b   |   &   |
+           ------|--------|-------|-------|
+            ->q0 |    -   |   -   | q1,q3 |
+             *q1 |   q2   |   -   |   -   |
+              q2 |   q1   |   -   |   -   |
+             *q3 |    -   |   q4  |   -   |
+              q4 |    -   |   q3  |   -   |
+           -------------------------------|
+
+        :return:{NDFA} non epsilon free
+        """
+        initial_state = 'q0'
+        accept_states = ['q1', 'q3']
+
+        delta_with_epsilon = {
+            'q0': {'&': {'q1', 'q3'}},
+            'q1': {'a': {'q2'}},
+            'q2': {'a': {'q1'}},
+            'q3': {'b': {'q4'}},
+            'q4': {'b': {'q3'}}
+        }
+
+        return NDFA(delta_with_epsilon, initial_state, accept_states)
+
+    def expected_dfa(self):
+        """ create DFA to help the tests
+            new_delta |     a    |     b    |
+           -----------|----------|----------|
+              ->{q0}  | {q1,q2}  |     -    |
+              *{q1,q2}|   {q1}   |   {q3}   |
+               *{q1}  |   {q1}   |     -    |
+               *{q3}  |   {q2}   |     -    |
+                {q2}  |     -    |   {q3}   |
+           ---------------------------------|
+        :return: {DFA}
+        """
+        # It's needed use frozenset on states to iterate by element in DFA
+        # for not use iterate in hashes
+        delta = {frozenset({'q0'}): {'a': frozenset({'q1','q2'})},
+                 frozenset({'q1', 'q2'}): {'a': frozenset({'q1'}), 'b': frozenset({'q3'})},
+                 frozenset({'q1'}): {'a': frozenset({'q1'})},
+                 frozenset({'q3'}): {'a': frozenset({'q2'})},
+                 frozenset({'q2'}): {'b': frozenset({'q3'})}}
+
+        initial_state = frozenset({'q0'})
+        accept_states = [frozenset({'q1', 'q2'}),
+                         frozenset({'q1'}),
+                         frozenset({'q3'})]
+
+        return DFA(delta, initial_state, accept_states)
+
+    def expected_dfa_epsilon_free(self):
+        """ create DFA to help the tests
+             new_delta  |   a  |   b  |
+           -------------|------|------|
+           ->*{q0,q1,q3}| {q2} | {q4} |
+                    {q2}| {q1} |   -  |
+                    {q4}|   -  | {q3} |
+                   *{q1}| {q2} |   -  |
+                   *{q3}|   -  | {q4} |
+           ---------------------------|
+        :return: {DFA}
+        """
+        # It's needed use frozenset on states to iterate by element in DFA
+        # for not use iterate in hashes
+        delta = {frozenset({'q0','q1','q3'}): {'a': frozenset({'q2'}), 'b': frozenset({'q4'})},
+                 frozenset({'q2'}): {'a': frozenset({'q1'})},
+                 frozenset({'q4'}): {'b': frozenset({'q3'})},
+                 frozenset({'q1'}): {'a': frozenset({'q2'})},
+                 frozenset({'q3'}): {'b': frozenset({'q4'})}}
+
+        initial_state = frozenset({'q0','q1','q3'})
+        accept_states = [frozenset({'q0','q1','q3'}),
+                         frozenset({'q1'}),
+                         frozenset({'q3'})]
+
+        return DFA(delta, initial_state, accept_states)
+
     def test_accept_sentence_aaa(self):
         """
         DFA accept sentence 'aaa'
@@ -163,7 +216,7 @@ class NDFATests(unittest.TestCase):
 
         self.assertIsInstance(ndfa_determinized, DFA)
 
-        expected_dfa = create_dfa()
+        expected_dfa = self.expected_dfa()
         self.assertDictEqual(expected_dfa.delta, ndfa_determinized.delta) # check delta transitions
         self.assertSetEqual(expected_dfa.accept_states, ndfa_determinized.accept_states) # check accept states
         self.assertEqual(expected_dfa.initial_state, ndfa_determinized.initial_state) # check initial state
@@ -172,34 +225,35 @@ class NDFATests(unittest.TestCase):
         self.assertSetEqual(expected_dfa.get_states(), ndfa_determinized.get_states())
         self.assertSetEqual(expected_dfa.get_alphabet(), ndfa_determinized.get_alphabet())
 
-    def test_is_epsilon_free(self):
-        self.assertTrue(self.ndfa.is_epsilon_free())
-
-    def create_epsilon_ndfa(self):
+    def test_determinization_epsilon_NDFA(self):
         """
-           delta |    a   |   b   |   &   |
-           ------|--------|-------|-------|
-            ->q0 |    -   |   -   | q1,q3 |
-             *q1 |   q2   |   -   |   -   |
-              q2 |   q1   |   -   |   -   |
-             *q3 |    -   |   q4  |   -   |
-              q4 |    -   |   q3  |   -   |
-           -------------------------------|
+        transform this epsilon-NDFA to compatible DFA
 
-        :return:{NDFA} non epsilon free
+        new delta table determinate
+
+           delta |    a   |   b   |   &   |             new_delta  |   a  |   b  |
+           ------|--------|-------|-------|           -------------|------|------|
+            ->q0 |    -   |   -   | q1,q3 |      \    ->*{q0,q1,q3}| {q2} | {q4} |
+             *q1 |   q2   |   -   |   -   |   ----\            {q2}| {q1} |   -  |
+              q2 |   q1   |   -   |   -   |   ----/            {q4}|   -  | {q3} |
+             *q3 |    -   |   q4  |   -   |      /            *{q1}| {q2} |   -  |
+              q4 |    -   |   q3  |   -   |                   *{q3}|   -  | {q4} |
+           -------------------------------|           ---------------------------|
+
         """
-        initial_state = 'q0'
-        accept_states = ['q1', 'q3']
+        epsilon_ndfa = self.create_epsilon_ndfa()
+        epsilon_ndfa_determinized = epsilon_ndfa.determinization()
 
-        delta_with_epsilon = {
-            'q0': {'&': {'q1', 'q3'}},
-            'q1': {'a': {'q2'}},
-            'q2': {'a': {'q1'}},
-            'q3': {'b': {'q4'}},
-            'q4': {'b': {'q3'}}
-        }
+        self.assertIsInstance(epsilon_ndfa_determinized, DFA)
 
-        return NDFA(delta_with_epsilon, initial_state, accept_states)
+        expected_dfa = self.expected_dfa_epsilon_free()
+        self.assertDictEqual(expected_dfa.delta, epsilon_ndfa_determinized.delta) # check delta transitions
+        self.assertSetEqual(expected_dfa.accept_states, epsilon_ndfa_determinized.accept_states) # check accept states
+        self.assertEqual(expected_dfa.initial_state, epsilon_ndfa_determinized.initial_state) # check initial state
+
+        # check states and alphabet from DFA generated
+        self.assertSetEqual(expected_dfa.get_states(), epsilon_ndfa_determinized.get_states())
+        self.assertSetEqual(expected_dfa.get_alphabet(), epsilon_ndfa_determinized.get_alphabet())
 
     def test_epsilon_closure_from_q0(self):
         epsilon_ndfa = self.create_epsilon_ndfa()

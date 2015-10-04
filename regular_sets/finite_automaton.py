@@ -1,5 +1,9 @@
 from functools import reduce
 
+def _union_sets(self, x, y):
+        if (len(x) or len(y)):
+            return (x | y )
+
 class DFA:
     """Class that encapsulates a DFA."""
 
@@ -95,7 +99,9 @@ class NDFA(DFA):
         """Converts the input NFA into a DFA.
         :return: {DFA} compatible with this NDFA
         """
-        _initial_state = frozenset([self.initial_state])  # define _initial_state as immutable
+        closure = {_state: self.epsilon_closure(_state) for _state in self.get_states()}
+
+        _initial_state = frozenset(closure[self.initial_state])  # define _initial_state as immutable
         _states = {_initial_state}
         unprocessed_states = _states.copy()  # unprocessed_states tracks states for which delta is not yet defined
         new_delta = {}
@@ -106,13 +112,21 @@ class NDFA(DFA):
             current_state = unprocessed_states.pop()
             new_delta[current_state] = {}
             for symbol in sigma:
-                next_states_list = [self.compute(q, symbol) for q in current_state] # it gets list of next states
-                next_states = reduce(lambda x, y: x | y, next_states_list) # union foreach list elements
+                if symbol == '&':
+                    continue
+                next_states_list = [self.compute(q, symbol)
+                                    for q in current_state
+                                    if len(self.compute(q, symbol))]  # it gets list of next states
+                try:
+                    next_states = reduce(lambda x, y: _union_sets(closure[x], closure[y]), next_states_list) # union foreach list elements
+                except TypeError:
+                    next_states = set([])
+
                 next_states = frozenset(next_states)
                 if len(next_states):
                     new_delta[current_state][symbol] = next_states
 
-                    if not next_states in _states: # if new state found, add to unprocessed list for it processes in future
+                    if not next_states in _states:  # if new state found, add to unprocessed list for it processes in future
                         _states.add(next_states)
                         unprocessed_states.add(next_states)
 
@@ -121,9 +135,6 @@ class NDFA(DFA):
                 accept_states.append(current_state)
 
         return DFA(new_delta, _initial_state, accept_states)
-
-    def is_epsilon_free(self):
-        return '&' not in self.get_alphabet()
 
     def epsilon_closure(self, state):
         epsilon_transitions = {_state: self.delta[_state]['&']
@@ -141,4 +152,3 @@ class NDFA(DFA):
                 unprocessed_states.add(s for s in state_to_add)
 
         return _epsilon_closure
-
