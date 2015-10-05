@@ -1,5 +1,4 @@
 import unittest
-import sys
 
 from regular_sets.finite_automaton import DFA, NDFA
 

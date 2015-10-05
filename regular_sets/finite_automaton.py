@@ -1,5 +1,5 @@
 ﻿from functools import reduce
-from regular_grammar import regular_grammar
+from regular_sets.regular_grammar import regular_grammar
 
 
 def _union_sets(self, x, y):
