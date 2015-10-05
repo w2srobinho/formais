@@ -3,6 +3,7 @@ import sys
 
 from regular_sets.finite_automaton import DFA, NDFA
 
+
 class DFATests(unittest.TestCase):
     def setUp(self):
         """delta table
@@ -116,7 +117,7 @@ class NDFATests(unittest.TestCase):
         """
         # It's needed use frozenset on states to iterate by element in DFA
         # for not use iterate in hashes
-        delta = {frozenset({'q0'}): {'a': frozenset({'q1','q2'})},
+        delta = {frozenset({'q0'}): {'a': frozenset({'q1', 'q2'})},
                  frozenset({'q1', 'q2'}): {'a': frozenset({'q1'}), 'b': frozenset({'q3'})},
                  frozenset({'q1'}): {'a': frozenset({'q1'})},
                  frozenset({'q3'}): {'a': frozenset({'q2'})},
@@ -143,14 +144,14 @@ class NDFATests(unittest.TestCase):
         """
         # It's needed use frozenset on states to iterate by element in DFA
         # for not use iterate in hashes
-        delta = {frozenset({'q0','q1','q3'}): {'a': frozenset({'q2'}), 'b': frozenset({'q4'})},
+        delta = {frozenset({'q0', 'q1', 'q3'}): {'a': frozenset({'q2'}), 'b': frozenset({'q4'})},
                  frozenset({'q2'}): {'a': frozenset({'q1'})},
                  frozenset({'q4'}): {'b': frozenset({'q3'})},
                  frozenset({'q1'}): {'a': frozenset({'q2'})},
                  frozenset({'q3'}): {'b': frozenset({'q4'})}}
 
-        initial_state = frozenset({'q0','q1','q3'})
-        accept_states = [frozenset({'q0','q1','q3'}),
+        initial_state = frozenset({'q0', 'q1', 'q3'})
+        accept_states = [frozenset({'q0', 'q1', 'q3'}),
                          frozenset({'q1'}),
                          frozenset({'q3'})]
 
@@ -213,9 +214,9 @@ class NDFATests(unittest.TestCase):
         self.assertIsInstance(ndfa_determinized, DFA)
 
         expected_dfa = self.expected_dfa()
-        self.assertDictEqual(expected_dfa.delta, ndfa_determinized.delta) # check delta transitions
-        self.assertSetEqual(expected_dfa.accept_states, ndfa_determinized.accept_states) # check accept states
-        self.assertEqual(expected_dfa.initial_state, ndfa_determinized.initial_state) # check initial state
+        self.assertDictEqual(expected_dfa.delta, ndfa_determinized.delta)  # check delta transitions
+        self.assertSetEqual(expected_dfa.accept_states, ndfa_determinized.accept_states)  # check accept states
+        self.assertEqual(expected_dfa.initial_state, ndfa_determinized.initial_state)  # check initial state
 
         # check states and alphabet from DFA generated
         self.assertSetEqual(expected_dfa.get_states(), ndfa_determinized.get_states())
@@ -250,9 +251,9 @@ class NDFATests(unittest.TestCase):
         self.assertIsInstance(epsilon_ndfa_determinized, DFA)
 
         expected_dfa = self.expected_dfa_epsilon_free()
-        self.assertDictEqual(expected_dfa.delta, epsilon_ndfa_determinized.delta) # check delta transitions
-        self.assertSetEqual(expected_dfa.accept_states, epsilon_ndfa_determinized.accept_states) # check accept states
-        self.assertEqual(expected_dfa.initial_state, epsilon_ndfa_determinized.initial_state) # check initial state
+        self.assertDictEqual(expected_dfa.delta, epsilon_ndfa_determinized.delta)  # check delta transitions
+        self.assertSetEqual(expected_dfa.accept_states, epsilon_ndfa_determinized.accept_states)  # check accept states
+        self.assertEqual(expected_dfa.initial_state, epsilon_ndfa_determinized.initial_state)  # check initial state
 
         # check states and alphabet from DFA generated
         self.assertSetEqual(expected_dfa.get_states(), epsilon_ndfa_determinized.get_states())
@@ -269,9 +270,8 @@ class NDFATests(unittest.TestCase):
     def test_epsilon_closure_from_q0(self):
         epsilon_ndfa = self.create_epsilon_ndfa()
         _epsilon_closure = epsilon_ndfa.epsilon_closure('q0')
-        expected_closure = {'q0','q1','q3'}
+        expected_closure = {'q0', 'q1', 'q3'}
         self.assertSetEqual(expected_closure, _epsilon_closure)
-
 
 
 if __name__ == '__main__':

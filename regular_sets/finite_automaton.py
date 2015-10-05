@@ -1,8 +1,10 @@
 from functools import reduce
 
+
 def _union_sets(self, x, y):
-        if (len(x) or len(y)):
-            return (x | y )
+    if (len(x) or len(y)):
+        return (x | y)
+
 
 class DFA:
     """Class that encapsulates a DFA."""
@@ -126,7 +128,8 @@ class NDFA(DFA):
                                     for q in current_state
                                     if len(self.compute(q, symbol))]  # it gets list of next states
                 try:
-                    next_states = reduce(lambda x, y: _union_sets(closure[x], closure[y]), next_states_list) # union foreach list elements
+                    next_states = reduce(lambda x, y: _union_sets(closure[x], closure[y]),
+                                         next_states_list)  # union foreach list elements
                 except TypeError:
                     next_states = set([])
 
