@@ -1,4 +1,5 @@
-from functools import reduce
+﻿from functools import reduce
+from regular_grammar import regular_grammar
 
 
 def _union_sets(self, x, y):
@@ -72,6 +73,33 @@ class DFA:
 
         return _states
 
+    def to_grammar(self):
+        """
+        :return: Productions of grammar
+        """
+        terminals = self.get_alphabet()
+        initial_simbol = self.initial_state
+        non_terminals = set()
+        productions = dict()
+        temp = list()
+        string = ''
+        next_state = set()
+
+        for current_state in self.delta: #each state
+            non_terminals.add(current_state)
+            for alphabet_simbol in self.delta[current_state]: #each simbol of the alphabet
+                for next_state_simbol in self.delta[current_state][alphabet_simbol]: #each next state
+                    string += next_state_simbol
+                    next_state.add(next_state_simbol)
+                    if next_state in self.accept_states and alphabet_simbol not in temp:
+                        temp.append(alphabet_simbol)
+                temp.append(alphabet_simbol + string)
+                string = ''
+            productions[current_state] = temp
+            temp = list()
+            next_state = set()
+
+        return regular_grammar(non_terminals, terminals, productions, initial_simbol)
 
 class NDFA(DFA):
     """Class that encapsulates an NFA.
