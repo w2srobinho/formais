@@ -24,10 +24,18 @@ class DFA:
         :param input_string: string to compute
         :return: last state computed
         """
-        _state = {state}
-        for a in input_string:
-            _state = self.delta[next(iter(_state))][a]
-        return next(iter(_state))
+        _state = state
+
+        try:
+            if (not isinstance(_state, frozenset)):
+                for a in input_string:
+                    _state = next(iter(self.delta[_state][a]))
+            else:
+                for a in input_string:
+                    _state = self.delta[_state][a]
+        except KeyError:
+            return {'reject'}
+        return _state
 
     def validate_sentence(self, input_string):
         """

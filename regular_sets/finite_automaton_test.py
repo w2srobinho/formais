@@ -1,11 +1,11 @@
 import unittest
+import sys
 
 from regular_sets.finite_automaton import DFA, NDFA
 
 class DFATests(unittest.TestCase):
     def setUp(self):
         """delta table
-
            L = {w | w ∈ Σ*={a, b} and |w| is pair}
 
            delta |   a   |   b   |
@@ -54,9 +54,7 @@ class DFATests(unittest.TestCase):
 class NDFATests(unittest.TestCase):
     def setUp(self):
         """delta table
-
-
-           L = a+ or (ab)+}
+           L = { a+ or (ab)+ }
 
            delta |    a   |   b   |
            ------|--------|-------|
@@ -78,15 +76,16 @@ class NDFATests(unittest.TestCase):
         self.ndfa = NDFA(self.delta, initial_state, accept_states)
 
     def create_epsilon_ndfa(self):
-        """
-           delta |    a   |   b   |   &   |
-           ------|--------|-------|-------|
-            ->q0 |    -   |   -   | q1,q3 |
-             *q1 |   q2   |   -   |   -   |
-              q2 |   q1   |   -   |   -   |
-             *q3 |    -   |   q4  |   -   |
-              q4 |    -   |   q3  |   -   |
-           -------------------------------|
+        """ delta table
+            L = { #a=pair xor #b=par }
+            delta |    a   |   b   |   &   |
+            ------|--------|-------|-------|
+             ->q0 |    -   |   -   | q1,q3 |
+              *q1 |   q2   |   -   |   -   |
+               q2 |   q1   |   -   |   -   |
+              *q3 |    -   |   q4  |   -   |
+               q4 |    -   |   q3  |   -   |
+            -------------------------------|
 
         :return:{NDFA} non epsilon free
         """
@@ -195,22 +194,19 @@ class NDFATests(unittest.TestCase):
         self.assertSetEqual({'q0', 'q1', 'q2', 'q3'}, states)
 
     def test_determinization(self):
-        """
-        transform this NDFA to compatible DFA
+        """new delta table determinate
 
-        new delta table determinate
+            transform this NDFA to compatible DFA
+            L = { a+ or (ab)+ }
 
-           L = a+ or (ab)+}
-
-           delta |    a   |   b   |             new_delta |     a    |     b    |
-           ------|--------|-------|              ---------|----------|----------|
-            ->q0 | q1,q2  |   -   |       \       ->{q0}  | {q1,q2}  |     -    |
-             *q1 |   q1   |   -   |    ----\      *{q1,q2}|   {q1}   |   {q3}   |
-              q2 |   -    |  q3   |    ----/       *{q1}  |   {q1}   |     -    |
-             *q3 |   q2   |   -   |       /        *{q3}  |   {q2}   |     -    |
-           -----------------------|                 {q2}  |     -    |   {q3}   |
-                                                 -------------------------------|
-
+            delta |    a   |   b   |             new_delta |     a    |     b    |
+            ------|--------|-------|              ---------|----------|----------|
+             ->q0 | q1,q2  |   -   |       \       ->{q0}  | {q1,q2}  |     -    |
+              *q1 |   q1   |   -   |    ----\      *{q1,q2}|   {q1}   |   {q3}   |
+               q2 |   -    |  q3   |    ----/       *{q1}  |   {q1}   |     -    |
+              *q3 |   q2   |   -   |       /        *{q3}  |   {q2}   |     -    |
+            -----------------------|                 {q2}  |     -    |   {q3}   |
+                                                  -------------------------------|
         """
         ndfa_determinized = self.ndfa.determinization()
 
@@ -225,20 +221,27 @@ class NDFATests(unittest.TestCase):
         self.assertSetEqual(expected_dfa.get_states(), ndfa_determinized.get_states())
         self.assertSetEqual(expected_dfa.get_alphabet(), ndfa_determinized.get_alphabet())
 
+        # validate sentences 'aaa' and 'ababab'
+        self.assertTrue(ndfa_determinized.validate_sentence('ababab'))
+        self.assertTrue(ndfa_determinized.validate_sentence('aaa'))
+
+        # reject sentence 'aaabab'
+        self.assertFalse(ndfa_determinized.validate_sentence('aaabab'))
+
     def test_determinization_epsilon_NDFA(self):
-        """
-        transform this epsilon-NDFA to compatible DFA
+        """new delta table determinate
+            transform this epsilon-NDFA to compatible DFA
+            L = { #a=pair xor #b=par }
 
-        new delta table determinate
 
-           delta |    a   |   b   |   &   |             new_delta  |   a  |   b  |
-           ------|--------|-------|-------|           -------------|------|------|
-            ->q0 |    -   |   -   | q1,q3 |      \    ->*{q0,q1,q3}| {q2} | {q4} |
-             *q1 |   q2   |   -   |   -   |   ----\            {q2}| {q1} |   -  |
-              q2 |   q1   |   -   |   -   |   ----/            {q4}|   -  | {q3} |
-             *q3 |    -   |   q4  |   -   |      /            *{q1}| {q2} |   -  |
-              q4 |    -   |   q3  |   -   |                   *{q3}|   -  | {q4} |
-           -------------------------------|           ---------------------------|
+            delta |    a   |   b   |   &   |             new_delta  |   a  |   b  |
+            ------|--------|-------|-------|           -------------|------|------|
+             ->q0 |    -   |   -   | q1,q3 |      \    ->*{q0,q1,q3}| {q2} | {q4} |
+              *q1 |   q2   |   -   |   -   |   ----\            {q2}| {q1} |   -  |
+               q2 |   q1   |   -   |   -   |   ----/            {q4}|   -  | {q3} |
+              *q3 |    -   |   q4  |   -   |      /            *{q1}| {q2} |   -  |
+               q4 |    -   |   q3  |   -   |                   *{q3}|   -  | {q4} |
+            -------------------------------|           ---------------------------|
 
         """
         epsilon_ndfa = self.create_epsilon_ndfa()
@@ -254,6 +257,14 @@ class NDFATests(unittest.TestCase):
         # check states and alphabet from DFA generated
         self.assertSetEqual(expected_dfa.get_states(), epsilon_ndfa_determinized.get_states())
         self.assertSetEqual(expected_dfa.get_alphabet(), epsilon_ndfa_determinized.get_alphabet())
+
+        # validate sentences 'empty('')', 'aa' and 'bbbb'
+        self.assertTrue(epsilon_ndfa_determinized.validate_sentence(''))
+        self.assertTrue(epsilon_ndfa_determinized.validate_sentence('aa'))
+        self.assertTrue(epsilon_ndfa_determinized.validate_sentence('bbbb'))
+
+        # reject sentence 'aaa'
+        self.assertFalse(epsilon_ndfa_determinized.validate_sentence('aaa'))
 
     def test_epsilon_closure_from_q0(self):
         epsilon_ndfa = self.create_epsilon_ndfa()
