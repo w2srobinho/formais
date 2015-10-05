@@ -85,10 +85,10 @@ class DFA:
         string = ''
         next_state = set()
 
-        for current_state in self.delta: #each state
+        for current_state in self.delta:  # each state
             non_terminals.add(current_state)
-            for alphabet_simbol in self.delta[current_state]: #each simbol of the alphabet
-                for next_state_simbol in self.delta[current_state][alphabet_simbol]: #each next state
+            for alphabet_simbol in self.delta[current_state]:  # each simbol of the alphabet
+                for next_state_simbol in self.delta[current_state][alphabet_simbol]:  # each next state
                     string += next_state_simbol
                     next_state.add(next_state_simbol)
                     if next_state in self.accept_states and alphabet_simbol not in temp:
@@ -100,6 +100,7 @@ class DFA:
             next_state = set()
 
         return regular_grammar(non_terminals, terminals, productions, initial_simbol)
+
 
 class NDFA(DFA):
     """Class that encapsulates an NFA.
